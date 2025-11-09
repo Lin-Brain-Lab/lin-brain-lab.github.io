@@ -1,0 +1,18 @@
+body {
+  font-family: Helvetica, Arial, sans-serif;
+  max-width: 800px;
+  margin: 40px auto;
+  line-height: 1.6;
+  color: #222;
+}
+nav a {
+  text-decoration: none;
+  color: #004080;
+  padding: 0 8px;
+}
+nav a:hover {
+  text-decoration: underline;
+}
+h1 {
+  color: #004080;
+}
