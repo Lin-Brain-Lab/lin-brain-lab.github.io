@@ -1,76 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Video Review</title>
-  <style>
-    body { font-family: sans-serif; margin: 40px; max-width: 600px; }
-    video { width: 100%; margin-top: 10px; }
-    .rating { display: flex; justify-content: space-between; margin-top: 20px; }
-    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
-    .message { margin-top: 20px; font-weight: bold; color: green; }
-  </style>
-</head>
-<body>
-  <h2>Upload and Review Video</h2>
+<section id="video-review" style="margin-top:40px;">
+  <h3>🎬 Video Review Tool</h3>
+  <p>Select a movie clip from the list, watch it, and rate it 1–10.</p>
 
-  <label>Select a short video:</label>
-  <input type="file" id="videoUpload" accept="video/*"><br>
-  <video id="videoPlayer" controls></video>
+  <label for="videoSelect">Choose a clip:</label><br>
+  <select id="videoSelect" style="margin-top:5px;">
+    <option value="">-- Select a video --</option>
+    <option value="https://drive.google.com/uc?export=download&id=1fns2A7stkoZZTtcSIaGDaT9Kgy_N5014">Clip 1 - Example A</option>
+    <option value="https://drive.google.com/uc?export=download&id=1Ic1rEWEdQJTuHV7oqVGEuKlfM1TOzzZJ">Clip 2 - Example B</option>
+    <option value="https://drive.google.com/uc?export=download&id=1z3EgOvi_dTzWTsmR-bOW_-7Vn_sVrT0S">Clip 3 - Example C</option>
+  </select>
 
-  <div class="rating">
+  <video id="videoPlayer" controls style="width:100%; max-width:600px; margin-top:15px; display:none;"></video>
+
+  <div class="rating" style="margin-top:20px;">
     <label for="rating">Rate (1–10):</label>
-    <input type="number" id="rating" min="1" max="10">
+    <input type="number" id="rating" min="1" max="10" style="width:60px;">
   </div>
 
-  <button id="submitBtn">Submit Rating</button>
-  <div class="message" id="message"></div>
+  <button id="submitBtn" style="margin-top:20px; padding:10px 20px;">Submit Rating</button>
+  <div class="message" id="message" style="margin-top:15px; font-weight:bold;"></div>
+</section>
 
-  <script>
-    const videoUpload = document.getElementById('videoUpload');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const submitBtn = document.getElementById('submitBtn');
-    const message = document.getElementById('message');
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJGiY0tbtDk8X3fbM86Ggg_NCGtKkburkPr5qy_DhXjQfkWOll_a7nwGlvSlVssRUXug/exec"; // paste it here
+<script>
+  const videoSelect = document.getElementById('videoSelect');
+  const videoPlayer = document.getElementById('videoPlayer');
+  const submitBtn = document.getElementById('submitBtn');
+  const message = document.getElementById('message');
+  const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxS0D6UG4THnw57NwtD90zIICn6-7vPyP1e0qaYjAnOQ2S21O-y1UTEoVfPzgJR4FsMBA/exec"; // Paste your Apps Script URL
 
-    let videoName = '';
+  let videoName = '';
+  let playTime = '';
 
-    // Preview the video after upload
-    videoUpload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        videoName = file.name;
-        const url = URL.createObjectURL(file);
-        videoPlayer.src = url;
-        videoPlayer.load();
-      }
-    });
+  // Show selected video
+  videoSelect.addEventListener('change', () => {
+    const url = videoSelect.value;
+    if (url) {
+      videoName = videoSelect.options[videoSelect.selectedIndex].text;
+      videoPlayer.src = url;
+      videoPlayer.style.display = 'block';
+      videoPlayer.load();
+    } else {
+      videoPlayer.style.display = 'none';
+    }
+  });
 
-    // Submit rating to Google Sheet
-    submitBtn.addEventListener('click', async () => {
-      const rating = document.getElementById('rating').value;
-      if (!rating || !videoName) {
-        message.style.color = 'red';
-        message.textContent = "Please upload a video and enter a rating (1–10).";
-        return;
-      }
-      try {
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ videoName, rating })
-        });
-        message.style.color = 'green';
-        message.textContent = "✅ Rating submitted successfully!";
-        document.getElementById('rating').value = '';
-      } catch (err) {
-        console.error(err);
-        message.style.color = 'red';
-        message.textContent = "Error submitting rating.";
-      }
-    });
-  </script>
-</body>
-</html>
+  // Record when the viewer starts playing
+  videoPlayer.addEventListener('play', () => {
+    playTime = new Date().toISOString();
+  });
+
+  // Fetch public IP (free API)
+  async function getIP() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip;
+    } catch {
+      return 'unknown';
+    }
+  }
+
+  // Submit rating
+  submitBtn.addEventListener('click', async () => {
+    const rating = document.getElementById('rating').value;
+    if (!rating || !videoName) {
+      message.style.color = 'red';
+      message.textContent = "⚠️ Please choose a video and enter a rating (1–10).";
+      return;
+    }
+
+    const rateTime = new Date().toISOString();
+    const ip = await getIP();
+
+    const payload = {
+      videoName,
+      playTime,
+      rateTime,
+      rating,
+      ip
+    };
+
+    try {
+      await fetch(GOOGLE_SCRIPT_URL + "?ip=" + encodeURIComponent(ip), {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      message.style.color = 'green';
+      message.textContent = "✅ Rating recorded successfully!";
+      document.getElementById('rating').value = '';
+    } catch (err) {
+      console.error(err);
+      message.style.color = 'red';
+      message.textContent = "❌ Error submitting rating.";
+    }
+  });
+</script>
