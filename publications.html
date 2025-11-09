@@ -2,19 +2,95 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Research | Lin Brain Lab</title>
-  <link rel="stylesheet" href="assets/css/style.css">
+  <title>Publications | Lin Brain Lab</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
+    h1 { color: #004080; }
+    nav a { margin-right: 10px; color: #004080; text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+    .year { margin-top: 2em; font-size: 1.3em; color: #004080; border-bottom: 1px solid #ccc; }
+    .paper { margin-bottom: 1em; }
+    .loading { color: gray; }
+  </style>
 </head>
 <body>
   <nav>
-    <a href="index.html">Home</a> |
-    <a href="research.html">Research</a> |
-    <a href="publications.html">Publications</a> |
-    <a href="tools-data.html">Tools/Data</a> |
+    <a href="index.html">Home</a>
+    <a href="research.html">Research</a>
+    <a href="publications.html">Publications</a>
+    <a href="tools-data.html">Tools/Data</a>
     <a href="members.html">Members</a>
   </nav>
   <hr>
   <h1>Publications</h1>
-  <p>Our publications</p>
+  <div id="status" class="loading">Loading publications from PubMed...</div>
+  <div id="publications"></div>
+
+  <script>
+  async function loadPublications() {
+    const author = "Fa-Hsuan Lin[Author]";
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(author)}&retmax=200&sort=pub+date&retmode=json`;
+
+    try {
+      const searchResponse = await fetch(searchUrl);
+      const searchData = await searchResponse.json();
+      const ids = searchData.esearchresult.idlist;
+      if (!ids.length) {
+        document.getElementById('status').innerText = "No publications found.";
+        return;
+      }
+
+      const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(',')}&retmode=json`;
+      const summaryResponse = await fetch(summaryUrl);
+      const summaryData = await summaryResponse.json();
+      const papers = Object.values(summaryData.result)
+        .filter(p => p.uid)
+        .map(p => ({
+          title: p.title,
+          source: p.fulljournalname,
+          year: p.pubdate.match(/\d{4}/)?.[0],
+          authors: p.authors.map(a => a.name).join(', '),
+          pmid: p.uid
+        }));
+
+      // Sort by year descending
+      papers.sort((a, b) => (b.year || 0) - (a.year || 0));
+
+      // Group by year
+      const grouped = papers.reduce((acc, p) => {
+        acc[p.year] = acc[p.year] || [];
+        acc[p.year].push(p);
+        return acc;
+      }, {});
+
+      const container = document.getElementById('publications');
+      document.getElementById('status').remove();
+
+      for (const year of Object.keys(grouped).sort((a, b) => b - a)) {
+        const yearHeader = document.createElement('div');
+        yearHeader.className = 'year';
+        yearHeader.innerText = year;
+        container.appendChild(yearHeader);
+
+        grouped[year].forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'paper';
+          div.innerHTML = `
+            <strong>${p.title}</strong><br>
+            <em>${p.source}</em><br>
+            ${p.authors}<br>
+            <a href="https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/" target="_blank">PMID: ${p.pmid}</a>
+          `;
+          container.appendChild(div);
+        });
+      }
+    } catch (err) {
+      document.getElementById('status').innerText = "Error loading publications.";
+      console.error(err);
+    }
+  }
+
+  loadPublications();
+  </script>
 </body>
 </html>
