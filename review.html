@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Video Review</title>
+  <style>
+    body { font-family: sans-serif; margin: 40px; max-width: 600px; }
+    video { width: 100%; margin-top: 10px; }
+    .rating { display: flex; justify-content: space-between; margin-top: 20px; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+    .message { margin-top: 20px; font-weight: bold; color: green; }
+  </style>
+</head>
+<body>
+  <h2>Upload and Review Video</h2>
+
+  <label>Select a short video:</label>
+  <input type="file" id="videoUpload" accept="video/*"><br>
+  <video id="videoPlayer" controls></video>
+
+  <div class="rating">
+    <label for="rating">Rate (1–10):</label>
+    <input type="number" id="rating" min="1" max="10">
+  </div>
+
+  <button id="submitBtn">Submit Rating</button>
+  <div class="message" id="message"></div>
+
+  <script>
+    const videoUpload = document.getElementById('videoUpload');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const submitBtn = document.getElementById('submitBtn');
+    const message = document.getElementById('message');
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJGiY0tbtDk8X3fbM86Ggg_NCGtKkburkPr5qy_DhXjQfkWOll_a7nwGlvSlVssRUXug/exec"; // paste it here
+
+    let videoName = '';
+
+    // Preview the video after upload
+    videoUpload.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        videoName = file.name;
+        const url = URL.createObjectURL(file);
+        videoPlayer.src = url;
+        videoPlayer.load();
+      }
+    });
+
+    // Submit rating to Google Sheet
+    submitBtn.addEventListener('click', async () => {
+      const rating = document.getElementById('rating').value;
+      if (!rating || !videoName) {
+        message.style.color = 'red';
+        message.textContent = "Please upload a video and enter a rating (1–10).";
+        return;
+      }
+      try {
+        const response = await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoName, rating })
+        });
+        message.style.color = 'green';
+        message.textContent = "✅ Rating submitted successfully!";
+        document.getElementById('rating').value = '';
+      } catch (err) {
+        console.error(err);
+        message.style.color = 'red';
+        message.textContent = "Error submitting rating.";
+      }
+    });
+  </script>
+</body>
+</html>
