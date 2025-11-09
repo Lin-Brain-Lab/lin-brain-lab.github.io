@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tools & Data | Lin Brain Lab</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      background-color: #fafafa;
+      color: #222;
+    }
 
+    header {
+      background-color: #1b1f23;
+      color: white;
+      padding: 15px 0;
+      text-align: center;
+    }
+
+    nav ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #333;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    nav li {
+      display: inline;
+    }
+
+    nav a {
+      display: block;
+      color: white;
+      text-align: center;
+      padding: 14px 20px;
+      text-decoration: none;
+    }
+
+    nav a:hover, nav a.active {
+      background-color: #007bff;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h3 {
+      margin-top: 40px;
+      color: #007bff;
+    }
+
+    section {
+      margin-bottom: 50px;
+    }
+
+    footer {
+      background-color: #1b1f23;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-top: 50px;
+    }
+
+    /* Button styling for review tool link */
+    .button-link {
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+
+    .button-link:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ====== Header ====== -->
+  <header>
+    <h2>Lin Brain Lab</h2>
+  </header>
+
+  <!-- ====== Navigation ====== -->
+  <nav>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="research.html">Research</a></li>
+      <li><a href="publications.html">Publications</a></li>
+      <li><a href="tools-data.html" class="active">Tools & Data</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- ====== Main Content ====== -->
+  <main>
+    <h1>Tools & Data</h1>
+
+    <section>
+      <h3>🧠 Data Resources</h3>
+      <p>
+        Our lab develops and shares open neuroimaging datasets and analysis pipelines.
+      </p>
+      <ul>
+        <li><a href="https://github.com/lin-brain-lab/fmri-preprocessing">fMRI Preprocessing Scripts</a></li>
+        <li><a href="https://github.com/lin-brain-lab/coilgen">CoilGen Magnetic Field Modeling</a></li>
+        <li><a href="https://openneuro.org/">OpenNeuro Shared Datasets</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>🧰 Analysis Tools</h3>
+      <p>
+        Computational tools and visualization utilities developed in the lab.
+      </p>
+      <ul>
+        <li><a href="https://github.com/lin-brain-lab/connectome-gradients">Functional Gradient Analysis</a></li>
+        <li><a href="https://github.com/lin-brain-lab/laminar-fmri">Laminar fMRI Model Simulator</a></li>
+        <li><a href="https://github.com/lin-brain-lab/trase-mri">TRASE MRI Encoding Tool</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>🎬 Video Review Tool</h3>
+      <p>
+        Reviewers can evaluate predefined short video clips hosted on Google Drive and submit ratings
+        (1–10 Likert scale). Responses are automatically recorded in our lab database.
+      </p>
+
+      <div style="text-align:center; margin-top:20px;">
+        <a href="https://lin-brain-lab.github.io/review.html" target="_blank" class="button-link">
+          ▶️ Open Video Review Page
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====== Footer ====== -->
+  <footer>
+    &copy; 2025 Lin Brain Lab | All Rights Reserved
+  </footer>
+</body>
+</html>
