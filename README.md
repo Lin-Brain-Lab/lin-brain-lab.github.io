@@ -1,2 +1,4 @@
 # lin-brain-lab.github.io
-Lin brain lab
+
+[Lin brain lab](https://lin-brain-lab.github.io)
+
