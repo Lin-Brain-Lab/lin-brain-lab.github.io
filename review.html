@@ -1,16 +1,18 @@
 <section id="video-review" style="margin-top:40px;">
   <h3>🎬 Video Review Tool</h3>
-  <p>Select a movie clip from the list, watch it, and rate it 1–10.</p>
+  <p>Select a movie clip, watch it, and rate it from 1–10. Your rating and timing will be saved automatically.</p>
 
   <label for="videoSelect">Choose a clip:</label><br>
   <select id="videoSelect" style="margin-top:5px;">
     <option value="">-- Select a video --</option>
-    <option value="https://drive.google.com/uc?export=download&id=1fns2A7stkoZZTtcSIaGDaT9Kgy_N5014">Clip 1 - Example A</option>
-    <option value="https://drive.google.com/uc?export=download&id=1Ic1rEWEdQJTuHV7oqVGEuKlfM1TOzzZJ">Clip 2 - Example B</option>
-    <option value="https://drive.google.com/uc?export=download&id=1z3EgOvi_dTzWTsmR-bOW_-7Vn_sVrT0S">Clip 3 - Example C</option>
+    <option value="https://drive.google.com/file/d/1fns2A7stkoZZTtcSIaGDaT9Kgy_N5014/preview">Clip 1 - Example A</option>
+    <option value="https://drive.google.com/file/d/1Ic1rEWEdQJTuHV7oqVGEuKlfM1TOzzZJ/preview">Clip 2 - Example B</option>
+    <option value="https://drive.google.com/file/d/1z3EgOvi_dTzWTsmR-bOW_-7Vn_sVrT0S/preview">Clip 3 - Example C</option>
   </select>
 
-  <video id="videoPlayer" controls style="width:100%; max-width:600px; margin-top:15px; display:none;"></video>
+  <iframe id="videoPlayer"
+          style="width:100%; max-width:600px; height:340px; margin-top:15px; border:none; display:none;"
+          allow="autoplay"></iframe>
 
   <div class="rating" style="margin-top:20px;">
     <label for="rating">Rate (1–10):</label>
@@ -31,25 +33,20 @@
   let videoName = '';
   let playTime = '';
 
-  // Show selected video
+  // When a video is selected
   videoSelect.addEventListener('change', () => {
     const url = videoSelect.value;
     if (url) {
       videoName = videoSelect.options[videoSelect.selectedIndex].text;
+      playTime = new Date().toISOString(); // record approximate play time
       videoPlayer.src = url;
       videoPlayer.style.display = 'block';
-      videoPlayer.load();
     } else {
       videoPlayer.style.display = 'none';
     }
   });
 
-  // Record when the viewer starts playing
-  videoPlayer.addEventListener('play', () => {
-    playTime = new Date().toISOString();
-  });
-
-  // Fetch public IP (free API)
+  // Get public IP
   async function getIP() {
     try {
       const res = await fetch('https://api.ipify.org?format=json');
@@ -60,7 +57,7 @@
     }
   }
 
-  // Submit rating
+  // Submit rating to Google Sheet
   submitBtn.addEventListener('click', async () => {
     const rating = document.getElementById('rating').value;
     if (!rating || !videoName) {
