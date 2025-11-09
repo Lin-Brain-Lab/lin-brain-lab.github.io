@@ -4,15 +4,49 @@
   <meta charset="UTF-8">
   <title>Publications | Lin Brain Lab</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; max-width: 900px; }
-    h1 { color: #004080; }
-    nav a { margin-right: 10px; color: #004080; text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
-    .year { margin-top: 2em; font-size: 1.3em; color: #004080; border-bottom: 1px solid #ccc; }
-    .paper { margin-bottom: 1em; }
-    .loading { color: gray; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      line-height: 1.6;
+      color: #222;
+    }
+    h1 {
+      color: #004080;
+      margin-bottom: 0.5em;
+    }
+    nav a {
+      margin-right: 12px;
+      color: #004080;
+      text-decoration: none;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .year {
+      font-size: 1.3em;
+      color: #004080;
+      margin-top: 2em;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+    .paper {
+      margin-bottom: 1em;
+    }
+    .loading {
+      color: gray;
+    }
+    footer {
+      margin-top: 3em;
+      font-size: 0.9em;
+      color: #666;
+      text-align: center;
+      border-top: 1px solid #ccc;
+      padding-top: 1em;
+    }
   </style>
 </head>
+
 <body>
   <nav>
     <a href="index.html">Home</a>
@@ -22,25 +56,44 @@
     <a href="members.html">Members</a>
   </nav>
   <hr>
+
   <h1>Publications</h1>
   <div id="status" class="loading">Loading publications from PubMed...</div>
   <div id="publications"></div>
 
+  <footer>
+    © <script>document.write(new Date().getFullYear())</script> Lin Brain Lab — All Rights Reserved
+  </footer>
+
   <script>
   async function loadPublications() {
     const author = "Fa-Hsuan Lin[Author]";
-    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(author)}&retmax=200&sort=pub+date&retmode=json`;
+    const cors = "https://api.allorigins.win/raw?url=";
+    const base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
+
+    const searchUrl = `${cors}${encodeURIComponent(
+      base + "esearch.fcgi?db=pubmed&term=" +
+      encodeURIComponent(author) +
+      "&retmax=200&sort=pub+date&retmode=json"
+    )}`;
 
     try {
+      // Step 1: Get PubMed IDs
       const searchResponse = await fetch(searchUrl);
       const searchData = await searchResponse.json();
-      const ids = searchData.esearchresult.idlist;
+      const ids = searchData.esearchresult?.idlist || [];
+
       if (!ids.length) {
-        document.getElementById('status').innerText = "No publications found.";
+        document.getElementById("status").innerText = "No publications found.";
         return;
       }
 
-      const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${ids.join(',')}&retmode=json`;
+      // Step 2: Fetch details
+      const summaryUrl = `${cors}${encodeURIComponent(
+        base + "esummary.fcgi?db=pubmed&id=" +
+        ids.join(",") + "&retmode=json"
+      )}`;
+
       const summaryResponse = await fetch(summaryUrl);
       const summaryData = await summaryResponse.json();
       const papers = Object.values(summaryData.result)
@@ -48,33 +101,34 @@
         .map(p => ({
           title: p.title,
           source: p.fulljournalname,
-          year: p.pubdate.match(/\d{4}/)?.[0],
-          authors: p.authors.map(a => a.name).join(', '),
+          year: p.pubdate.match(/\d{4}/)?.[0] || "No Year",
+          authors: p.authors?.map(a => a.name).join(", ") || "",
           pmid: p.uid
         }));
 
-      // Sort by year descending
+      // Step 3: Sort by year descending
       papers.sort((a, b) => (b.year || 0) - (a.year || 0));
 
-      // Group by year
+      // Step 4: Group by year
       const grouped = papers.reduce((acc, p) => {
         acc[p.year] = acc[p.year] || [];
         acc[p.year].push(p);
         return acc;
       }, {});
 
-      const container = document.getElementById('publications');
-      document.getElementById('status').remove();
+      const container = document.getElementById("publications");
+      document.getElementById("status").remove();
 
+      // Step 5: Render to HTML
       for (const year of Object.keys(grouped).sort((a, b) => b - a)) {
-        const yearHeader = document.createElement('div');
-        yearHeader.className = 'year';
+        const yearHeader = document.createElement("div");
+        yearHeader.className = "year";
         yearHeader.innerText = year;
         container.appendChild(yearHeader);
 
         grouped[year].forEach(p => {
-          const div = document.createElement('div');
-          div.className = 'paper';
+          const div = document.createElement("div");
+          div.className = "paper";
           div.innerHTML = `
             <strong>${p.title}</strong><br>
             <em>${p.source}</em><br>
@@ -85,8 +139,9 @@
         });
       }
     } catch (err) {
-      document.getElementById('status').innerText = "Error loading publications.";
       console.error(err);
+      document.getElementById("status").innerText =
+        "Error loading publications (check CORS or network).";
     }
   }
 
