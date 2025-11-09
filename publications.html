@@ -71,11 +71,20 @@
     const cors = "https://api.allorigins.win/raw?url=";
     const base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
 
+    const cors = "https://corsproxy.io/?";
+    const base = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/";
+
     const searchUrl = `${cors}${encodeURIComponent(
-      base + "esearch.fcgi?db=pubmed&term=" +
-      encodeURIComponent(author) +
-      "&retmax=200&sort=pub+date&retmode=json"
-    )}`;
+  base + "esearch.fcgi?db=pubmed&term=" +
+  encodeURIComponent(author) +
+  "&retmax=200&sort=pub+date&retmode=json"
+)}`;
+
+    const summaryUrl = ids => `${cors}${encodeURIComponent(
+  base + "esummary.fcgi?db=pubmed&id=" +
+  ids.join(",") + "&retmode=json"
+)}`;
+
 
     try {
       // Step 1: Get PubMed IDs
@@ -93,8 +102,7 @@
         base + "esummary.fcgi?db=pubmed&id=" +
         ids.join(",") + "&retmode=json"
       )}`;
-
-      const summaryResponse = await fetch(summaryUrl);
+      const summaryResponse = await fetch(summaryUrl(ids));
       const summaryData = await summaryResponse.json();
       const papers = Object.values(summaryData.result)
         .filter(p => p.uid)
