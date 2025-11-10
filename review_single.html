@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Review | Lin Brain Lab</title>
+  <style>
+    body { 
+      font-family: sans-serif; 
+      margin: 40px; 
+      max-width: 700px; 
+      line-height: 1.6; 
+    }
+    h2 { color: #007bff; }
+    iframe { 
+      width:100%; 
+      max-width:700px; 
+      height:400px; 
+      border:none; 
+      margin-top:15px; 
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 25px;
+      accent-color: #007bff;
+    }
+    button {
+      margin-top: 25px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    .value-display {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎬 Video Review</h2>
+  <p>
+    Please watch the following video carefully, then use the slider to rate your impression between 
+    <strong>-1</strong> (very negative) and <strong>+1</strong> (very positive).
+  </p>
+
+  <!-- Pre-selected movie -->
+  <iframe id="videoPlayer" 
+          src="https://drive.google.com/file/d/1fns2A7stkoZZTtcSIaGDaT9Kgy_N5014/preview"
+          allow="autoplay">
+  </iframe>
+
+  <div style="margin-top: 25px;">
+    <label for="rating">Your Rating (-1 to +1):</label>
+    <input type="range" id="rating" min="-1" max="1" step="0.01" value="0">
+    <div class="value-display">Current value: <span id="ratingValue">0</span></div>
+  </div>
+
+  <button id="submitBtn">Submit Rating</button>
+  <div class="message" id="message"></div>
+
+  <script>
+    const videoPlayer = document.getElementById('videoPlayer');
+    const ratingSlider = document.getElementById('rating');
+    const ratingValue = document.getElementById('ratingValue');
+    const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // replace this with your Google Apps Script URL
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxS0D6UG4THnw57NwtD90zIICn6-7vPyP1e0qaYjAnOQ2S21O-y1UTEoVfPzgJR4FsMBA/exec"; // Paste your Apps Script URL
+
+    const videoName = "Clip 1 - Example A"; // manually define since only one video
+    let playTime = '';
+
+    // Record when viewer starts playing
+    window.addEventListener('load', () => {
+      playTime = new Date().toISOString();
+    });
+
+    // Update numeric display
+    ratingSlider.addEventListener('input', () => {
+      ratingValue.textContent = ratingSlider.value;
+    });
+
+    // Get viewer IP
+    async function getIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip;
+      } catch {
+        return 'unknown';
+      }
+    }
+
+    // Submit to Google Sheet
+    submitBtn.addEventListener('click', async () => {
+      const rating = ratingSlider.value;
+      const rateTime = new Date().toISOString();
+      const ip = await getIP();
+
+      const payload = {
+        videoName,
+        playTime,
+        rateTime,
+        rating,
+        ip
+      };
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL + "?ip=" + encodeURIComponent(ip), {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        message.style.color = 'green';
+        message.textContent = "✅ Rating recorded successfully!";
+      } catch (err) {
+        console.error(err);
+        message.style.color = 'red';
+        message.textContent = "❌ Error submitting rating.";
+      }
+    });
+  </script>
+</body>
+</html>
