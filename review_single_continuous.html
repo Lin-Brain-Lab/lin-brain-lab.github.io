@@ -162,8 +162,19 @@
       stopBtn.disabled = true;
     }
 
-    startBtn.addEventListener('click', () => { if (player) player.playVideo(); });
-    stopBtn.addEventListener('click', stopRecording);
+    // Buttons not needed anymore, but you can still show feedback
+    startBtn.style.display = "none";
+    stopBtn.style.display = "none";
+
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.PLAYING && !recording) {
+        playTime = new Date().toISOString();
+        startRecording();
+      } else if (event.data === YT.PlayerState.ENDED && recording) {
+        stopRecording();
+      }
+    }
+
   </script>
 </body>
 </html>
