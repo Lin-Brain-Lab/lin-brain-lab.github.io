@@ -110,12 +110,20 @@
       ratingValue.textContent = ratingSlider.value;
     });
 
-    async function getIP() {
-      try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const data = await res.json();
-        return data.ip;
-      } catch { return 'unknown'; }
+
+    function getIP() {
+      return new Promise((resolve) => {
+        const script = document.createElement('script');
+        const callbackName = 'ipifyCallback_' + Math.random().toString(36).substring(2);
+        window[callbackName] = function (data) {
+          resolve(data.ip);
+          delete window[callbackName];
+          script.remove();
+        };
+        script.src = `https://api.ipify.org?format=jsonp&callback=${callbackName}`;
+        script.onerror = () => resolve('unknown');
+        document.body.appendChild(script);
+      });
     }
 
     async function sendRating(rating, timestamp) {
