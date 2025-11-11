@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Continuous Video Rating | Lin Brain Lab</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 40px;
+      max-width: 700px;
+      line-height: 1.6;
+    }
+    h2 { color: #007bff; }
+    iframe {
+      width: 100%;
+      max-width: 700px;
+      height: 400px;
+      border: none;
+      margin-top: 15px;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 25px;
+      accent-color: #007bff;
+    }
+    .value-display {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 25px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎬 Continuous Video Rating</h2>
+  <p>
+    Watch the following video and continuously adjust the slider between 
+    <strong>-1</strong> (very negative) and <strong>+1</strong> (very positive)
+    to reflect your feelings in real-time. Ratings are automatically recorded every few seconds.
+  </p>
+
+  <!-- Pre-selected video -->
+  <iframe
+    id="videoPlayer"
+    src="https://drive.google.com/file/d/1fns2A7stkoZZTtcSIaGDaT9Kgy_N5014/preview"
+    allow="autoplay">
+  </iframe>
+
+  <!-- Continuous slider -->
+  <div style="margin-top: 25px;">
+    <label for="rating">Your Rating (-1 to +1):</label>
+    <input type="range" id="rating" min="-1" max="1" step="0.01" value="0">
+    <div class="value-display">Current value: <span id="ratingValue">0</span></div>
+  </div>
+
+  <!-- Control buttons -->
+  <button id="startBtn">▶️ Start Recording</button>
+  <button id="stopBtn" disabled>⏹ Stop Recording</button>
+  <div class="message" id="message"></div>
+
+  <script>
+    const ratingSlider = document.getElementById('rating');
+    const ratingValue = document.getElementById('ratingValue');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const message = document.getElementById('message');
+
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxS0D6UG4THnw57NwtD90zIICn6-7vPyP1e0qaYjAnOQ2S21O-y1UTEoVfPzgJR4FsMBA/exec"; // Paste your Apps Script URL    const videoName = "Clip 1 - Example A"; // change for each movie
+    const samplingInterval = 5; // seconds between logs
+
+    let recording = false;
+    let timer = null;
+    let playTime = '';
+    let ipAddress = '';
+
+    // Update display
+    ratingSlider.addEventListener('input', () => {
+      ratingValue.textContent = ratingSlider.value;
+    });
+
+    // Fetch viewer IP
+    async function getIP() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        return data.ip;
+      } catch {
+        return 'unknown';
+      }
+    }
+
+    // Send one rating to Google Sheet
+    async function sendRating(rating, timestamp) {
+      const payload = {
+        videoName,
+        playTime,
+        rateTime: timestamp,
+        rating,
+        ip: ipAddress
+      };
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL + "?ip=" + encodeURIComponent(ipAddress), {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.error("Error sending rating:", err);
+      }
+    }
+
+    // Start continuous logging
+    startBtn.addEventListener('click', async () => {
+      if (recording) return;
+      ipAddress = await getIP();
+      playTime = new Date().toISOString();
+      recording = true;
+      message.style.color = 'green';
+      message.textContent = "⏺ Recording started. Ratings will be logged every " + samplingInterval + " seconds.";
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+
+      // send ratings periodically
+      timer = setInterval(async () => {
+        const currentRating = ratingSlider.value;
+        const now = new Date().toISOString();
+        await sendRating(currentRating, now);
+      }, samplingInterval * 1000);
+    });
+
+    // Stop continuous logging
+    stopBtn.addEventListener('click', () => {
+      if (!recording) return;
+      clearInterval(timer);
+      recording = false;
+      message.style.color = 'blue';
+      message.textContent = "✅ Recording stopped.";
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>
